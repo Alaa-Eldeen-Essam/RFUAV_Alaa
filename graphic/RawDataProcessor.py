@@ -224,6 +224,9 @@ def show_spectrum(datapack: str = '',
         plt.title(drone_name)
         plt.xlabel('Time (s)')
         plt.ylabel('Frequency (Hz)')
+        plt.savefig('spectrogram_output.png', dpi=150, bbox_inches='tight')
+        plt.close()
+        print("Saved to spectrogram_output.png")
         plt.show()
 
 
@@ -264,7 +267,10 @@ def show_half_only(datapack: str = '',
         plt.xlabel('Time (s)')
         plt.ylabel('Frequency (Hz)')
         plt.colorbar()
-        plt.show()
+        plt.savefig('spectrogram_output.png', dpi=150, bbox_inches='tight')
+        plt.close()
+        print("Saved to spectrogram_output.png")
+        # plt.show()
         print("figure I done")
 
         # Q部分數據的時頻圖
@@ -275,6 +281,9 @@ def show_half_only(datapack: str = '',
         plt.xlabel('Time (s)')
         plt.ylabel('Frequency (Hz)')
         plt.colorbar()
+        plt.savefig('spectrogram_output.png', dpi=150, bbox_inches='tight')
+        plt.close()
+        print("Saved to spectrogram_output.png")
         plt.show()
         print("figure Q done")
 
@@ -611,7 +620,15 @@ def main():
                          Middle_Frequency=2400e6
                          )
     """
-
+    data_path = r'D:\Behoos_AI\AI Projects\DF\detect_classify\Data\RFUAV\DEVENTION DEVO\DEVENTION DEVO\pack1_0-1s.iq'
+    test = RawDataProcessor()
+    test.ShowSpectrogram(data_path=data_path,
+                         drone_name='DEVENTION DEVO',
+                         sample_rate=100e6,
+                         stft_point=2048,
+                         duration_time=0.1,
+                         Middle_Frequency=2400e6
+                         )
     """
     save_path = ''
     data_path = ''

@@ -74,17 +74,20 @@ class Classify_Model(nn.Module):
         super().__init__()
         self.logger = self.set_logger
 
-        if check_cfg(cfg):
-            self.logger.log_with_color(f"Using config file: {cfg}")
-            self.cfg = build_from_cfg(cfg)
+        # line ~77 in benchmark.py
+        if check_cfg(cfg, mode='inference'):
+            self.cfg = build_from_cfg(cfg, mode='inference')
 
         if self.cfg['device'] == 'cuda':
             if torch.cuda.is_available():
                 self.logger.log_with_color("Using GPU for inference")
-                self.device = self.cfg['device']
+                self.device = 'cuda'
+            else:
+                self.logger.log_with_color("CUDA not available, falling back to CPU")
+                self.device = 'cpu'
         else:
             self.logger.log_with_color("Using CPU for inference")
-            self.device = "cpu"
+            self.device = 'cpu'
 
         if os.path.exists(weight_path):
             self.logger.log_with_color(f"Using weight file: {weight_path}")
@@ -162,23 +165,17 @@ class Classify_Model(nn.Module):
 
     @property
     def load_model(self):
-        """
-        Loads the pre-trained model.
-
-        Returns:
-        - model (torch.nn.Module): Loaded model.
-        """
-
         self.logger.log_with_color(f"Using device: {self.device}")
-        model = model_init_(self.cfg['model'], self.cfg['num_classes'], pretrained=True)
+        # Use pretrained=False since we're loading our own weights
+        model = model_init_(self.cfg['model'], self.cfg['num_classes'], pretrained=False)
 
         if os.path.exists(self.weight_path):
-            self.logger.log_with_color(f"Loading init weights from: {self.weight_path}")
+            self.logger.log_with_color(f"Loading weights from: {self.weight_path}")
             state_dict = torch.load(self.weight_path, map_location=self.device)
             model.load_state_dict(state_dict)
-            self.logger.log_with_color(f"Successfully loaded pretrained weights from: {self.weight_path}")
+            self.logger.log_with_color(f"Successfully loaded weights from: {self.weight_path}")
         else:
-            self.logger.log_with_color(f"init weights file not found at: {self.weight_path}. Skipping weight loading.")
+            self.logger.log_with_color(f"Weight file not found at: {self.weight_path}")
 
         return model
 
@@ -585,16 +582,10 @@ def is_valid_file(path, total_ext):
 
 
 def get_key_from_value(d, value):
-    """
-    Gets the key from a dictionary based on the value.
-
-    Parameters:
-    - d (dict): Dictionary.
-    - value: Value to find the key for.
-
-    Returns:
-    - key: Key corresponding to the value, or None if not found.
-    """
+    if isinstance(d, list):
+        if value < len(d):
+            return d[value]
+        return None
     for key, val in d.items():
         if val == value:
             return key

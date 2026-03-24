@@ -13,22 +13,27 @@ Model_list = [
     "mobilenet_v3_large"]
 
 
-def check_cfg(cfg: str):
+def check_cfg(cfg: str, mode: str = 'train'):
 
     opt = yaml.load(open(cfg, 'r', encoding='utf-8'), Loader=yaml.FullLoader)
+
     if len(opt['class_names']) != opt['num_classes']:
         raise ValueError("The number of classes does not match the number of class names")
-    if not os.path.exists(opt['train']):
-        raise ValueError("Training data path does not exist: {}".format(opt['train']))
-    if not os.path.exists(opt['val']):
-        raise ValueError("Validation data path does not exist: {}".format(opt['val']))
-    if not os.path.exists(opt['save_path']):
-        raise ValueError("Save path does not exist: {}".format(opt['save_path']))
+
+    # Only check train/val/save paths when training
+    if mode == 'train':
+        if not os.path.exists(opt['train']):
+            raise ValueError("Training data path does not exist: {}".format(opt['train']))
+        if not os.path.exists(opt['val']):
+            raise ValueError("Validation data path does not exist: {}".format(opt['val']))
+        if not os.path.exists(opt['save_path']):
+            raise ValueError("Save path does not exist: {}".format(opt['save_path']))
+
     if not isinstance(opt['model'], str) or opt['model'].lower() not in Model_list:
         raise ValueError("The model you specified is not available")
     if not isinstance(opt['num_classes'], int):
         raise ValueError("The number of classes must be an integer")
-    if opt['weights'] == None or not os.path.exists(opt['weights']):
+    if opt.get('weights') is None or opt.get('weights') == 'None' or not os.path.exists(opt['weights']):
         logging.info("No pretrained weights specified, training from scratch")
         opt['pretrained'] = False
     if opt['device'] != 'cpu' and not torch.cuda.is_available():
@@ -37,11 +42,10 @@ def check_cfg(cfg: str):
     return True
 
 
-def build_from_cfg(cfg: str = DefaultConfig):
+def build_from_cfg(cfg: str = DefaultConfig, mode: str = 'train'):
     if cfg != DefaultConfig:
-        if not check_cfg(cfg):
+        if not check_cfg(cfg, mode=mode):
             raise ValueError("Invalid config file: {}".format(cfg))
         logging.info("Using custom config: {}".format(cfg))
     opt = yaml.load(open(cfg, 'r', encoding='utf-8'), Loader=yaml.FullLoader)
-
     return opt
